@@ -4,26 +4,39 @@ import matplotlib.pyplot as plt
 ###########################################################
 # basic settings
 
-vis = 'uid___A002_Xbe0d4d_X12f5.asdm.sdm.ms'
+vis = 'uid___A002_Xbf792a_X14cc.ms'
 
-iants = range(43)
-# iants = range(1)
-
-chan_WVR = 0 # WVR channels
+chan_WVR = 1 # WVR channels
 spw_Tsys = 17 # Tsys spectral window
 average_spw = True
-
-scan_ATM = np.array([2,5,8,10, 12, 16,18, 20, 24, 26, 28, 32, 34])
-scan_phase = np.array([6,11,14,19,22,27,30,35])
-scan_checksource = np.array([7, 15, 23, 31])
-scan_bpass = np.array([3])
-scan_sci = np.array([7,9,13,17,21,25,29,33])
 
 scinormScan = 0
 phasenormScan = 0
 bpassnormScan = 0
 
 time_avg = 10
+
+# get the number of antennaes
+msmd.open(vis)
+nants = msmd.nantennas()
+msmd.done()
+iants = range(nants)
+# iants = range(1)
+
+# get the scan number for different observations
+msmd.open(vis)
+scan_ATM = msmd.scansforintent('*CALIBRATE_ATMOSPHERE*')
+scan_phase = msmd.scansforintent('*CALIBRATE_PHASE*')
+scan_checksource = msmd.scansforintent('*OBSERVE_CHECK_SOURCE*')
+scan_bpass = msmd.scansforintent('*CALIBRATE_BANDPASS*')
+scan_sci = msmd.scansforintent('*OBSERVE_TARGET*')
+msmd.done()
+
+# scan_ATM = np.array([2, 5, 8, 10, 15, 17, 22, 24, 29, 31])
+# scan_phase = np.array([6, 11, 13, 18, 20, 25, 27, 32, 34])
+# scan_checksource = np.array([7, 14, 21, 28])
+# scan_bpass = np.array([3])
+# scan_sci = np.array([9, 12, 16, 19, 23, 26, 30, 33])
 
 ###########################################################
 # functions
@@ -176,41 +189,28 @@ def rebin_time(data, time, timebin=10, method='mean'):
 start = time.time()
 
 ### create the alternative Tsys tables
-tb.open('uid___A002_Xbe0d4d_X12f5.asdm.sdm.ms.tsys')
-tabdesc = tb.getdesc()
-dminfo  = tb.getdminfo()
-info = tb.info()
-tb.close()
+vis_tsys_in = vis + '.tsys'
+vis_tsys_out = vis.replace('.ms', '_v3.ms.tsys')
+rmtables(vis_tsys_out)
+os.system('cp -r '+vis_tsys_in+' '+vis_tsys_out)
 
-rmtables('uid___A002_Xbe0d4d_X12f5_v3.asdm.sdm.ms.tsys')
-os.system('cp -r uid___A002_Xbe0d4d_X12f5.asdm.sdm.ms.tsys\
-        uid___A002_Xbe0d4d_X12f5_v3.asdm.sdm.ms.tsys')
-tb.open('uid___A002_Xbe0d4d_X12f5_v3.asdm.sdm.ms.tsys', nomodify=False)
+tb.open(vis_tsys_out, nomodify=False)
 nrows = tb.nrows()
 tb.removerows(range(nrows))
 tb.flush()
 tb.close()
 
-
 ### create a new gain table
 # copy the info from amplitude gain table
-tb.open('uid___A002_Xbe0d4d_X12f5.asdm.sdm.ms.split.ampli_inf')
-tabdesc = tb.getdesc()
-dminfo = tb.getdminfo()
-info = tb.info()
-tb.colnames()
-tb.close()
+vis_amp_gain = vis+'.split.ampli_inf'
+vis_tsys_gain = vis.replace('.ms', '_v3_tsys_WVR.gcal') 
+rmtables(vis_tsys_gain)
+os.system('cp -r '+vis_amp_gain+' '+vis_tsys_gain)
 
-# modify the table information from the amp gain table
-
-# Create a new gain table 
-rmtables('uid___A002_Xbe0d4d_X12f5_v3_tsys_WVR.gcal')
-os.system('cp -r uid___A002_Xbe0d4d_X12f5.asdm.sdm.ms.split.ampli_inf\
-        uid___A002_Xbe0d4d_X12f5_v3_tsys_WVR.gcal')
-tb.open('uid___A002_Xbe0d4d_X12f5_v3_tsys_WVR.gcal',nomodify=False)
+tb.open(vis_tsys_gain, nomodify=False)
 nrows = tb.nrows()
 tb.removerows(range(nrows))
-tb.putkeyword("MSName", "uid___A002_Xbe0d4d_X12f5.asdm.sdm.ms") 
+tb.putkeyword("MSName", vis) 
 tb.flush()
 tb.close()
 
@@ -355,7 +355,7 @@ for iant in iants:
     WVR_norm_binned[isin_phase_WVR] = WVR_phase_norm
 
     ## write the normalized WVR data into a gaintable.  
-    tb.open('uid___A002_Xbe0d4d_X12f5_v3_tsys_WVR.gcal', nomodify=False)
+    tb.open(vis_tsys_gain, nomodify=False)
     gcal_time = np.tile(WVR_time_binned, 4)
     gcal_data = np.tile(WVR_norm_binned, 4)[np.newaxis, np.newaxis,:] 
     tb.addrows(len(gcal_time))
@@ -406,11 +406,11 @@ for iant in iants:
     time_Tsys_bpass_avg = np.mean(time_Tsys_bpass, axis=1)
 
     ## extrapolate Tsys spectrum
-    tb.open('uid___A002_Xbe0d4d_X12f5.asdm.sdm.ms.tsys')
+    tb.open(vis_tsys_in)
     dat = tb.query('ANTENNA1==%d'%(iant))
     Tsys_spec_orig = dat.getcol('FPARAM')
     tb.close()
-    # 2 types of observations (bpass and sci) and 4 spws. 
+    # 3 types of observations (bpass and sci) and 4 spws. 
     Tsys_spec_ext = np.full(np.shape(Tsys_spectrum)[0:2]+(3*4,), np.nan)
     # calculate the indexes to extract from the original tsys table
     isin_extract = np.tile(np.array([isin_bpass[0][bpassnormScan],
@@ -432,7 +432,7 @@ for iant in iants:
 
     ## write a new Tsys into the alternative Tsys table
     # copy the information from .tsys table
-    tb.open('uid___A002_Xbe0d4d_X12f5.asdm.sdm.ms.tsys')
+    tb.open(vis_tsys_in)
     dat = tb.query('ANTENNA1==%d'%(iant))
     time_Tsys3 = dat.getcol('TIME')[isin_extract]
     field_Tsys3 = dat.getcol('FIELD_ID')[isin_extract]
@@ -443,7 +443,7 @@ for iant in iants:
     paramerr_Tsys3 = dat.getcol('PARAMERR')[:,:,isin_extract]
     tb.close()
 
-    tb.open('uid___A002_Xbe0d4d_X12f5_v3.asdm.sdm.ms.tsys', nomodify=False)
+    tb.open(vis_tsys_out, nomodify=False)
     tb.addrows(len(time_Tsys3))
     tb.putcol('TIME',time_Tsys3,startrow) 
     tb.putcol('FIELD_ID',field_Tsys3,startrow) 

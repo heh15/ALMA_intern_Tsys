@@ -44,10 +44,6 @@ with open (filename, 'rb') as pickle_file:
 
 # information of the data
 info = Tsys_table['info']
-info_txts = copy.deepcopy(info)
-for key in info_txts.keys():
-    info_txts[key] = str(info_txts[key])
-
 
 keywords_title = ', '.join('{}  {}'.format(key, value) for key, value in info.items())
 keywords_filename = '_'.join('{}{}'.format(key, value) for key, value in info.items())
@@ -73,8 +69,8 @@ WVR_norms[np.where(WVR_norms==1)] = np.nan
 Tsys_norms[np.where(Tsys_norms==1)] = np.nan
 Tsky_norms[np.where(Tsky_norms==1)] = np.nan
 
-err_rel = np.nanmean(np.abs(Tsys_norms - WVR_norms)/WVR_norms)
-err_rel2 = np.nanmean(np.abs(Tsky_norms - WVR_norms)/WVR_norms)
+err_rel = np.sqrt(np.nansum((Tsys_norms - WVR_norms)**2)/np.count_nonzero(~np.isnan(Tsys_norms))) / np.nanmean(Tsys_norms)
+err_rel2 = np.sqrt(np.nansum((Tsky_norms - WVR_norms)**2)/np.count_nonzero(~np.isnan(Tsky_norms))) / np.nanmean(Tsky_norms)
 
 #############################
 # plot the Tsys vs WVR
@@ -88,7 +84,7 @@ color_dict["Mean relative error "+str(round(err_rel,4))] = 'black'
 legendhandle = [plt.plot([], marker="o", ls="", color=color)[0] for color in list(color_dict.values())]
 
 # plot the scatter plot
-sc = ax.scatter(Tsys_norms, WVR_norms, c=map_series_by_dict(obs_type, color_dict))
+sc = ax.scatter(WVR_norms, Tsys_norms, c=map_series_by_dict(obs_type, color_dict))
 
 # plot the 1-to-1 line
 lower=max(ax.set_xlim()[0], ax.set_ylim()[0])
@@ -96,12 +92,12 @@ upper=min(ax.set_xlim()[1], ax.set_ylim()[1])
 ax.plot([lower, upper],[lower,upper],ls='--', color='black')
 
 # title
-title = 'WVR vs Tsys, all ants '+keywords_title
+title = 'Tsys vs WVR, all ants '+keywords_title
 plt.title(title)
 
 # label
-plt.xlabel('Normalized Tsys')
-plt.ylabel('Normalized WVR')
+plt.xlabel('Normalized WVR')
+plt.ylabel('Normalized Tsys')
 plt.legend(loc='upper left', framealpha=0.5)
 plt.legend(legendhandle,list(color_dict.keys()), loc='upper left', framealpha=0.5)
 plt.savefig('Tsys_WVR_correlation_band10'+keywords_filename+'.pdf', bbox_incehs='tight')
@@ -119,7 +115,7 @@ color_dict["Mean relative error "+str(round(err_rel,4))] = 'black'
 legendhandle = [plt.plot([], marker="o", ls="", color=color)[0] for color in list(color_dict.values())]
 
 # plot the scatter plot
-sc = ax.scatter(Tsky_norms, WVR_norms, c=map_series_by_dict(obs_type, color_dict))
+sc = ax.scatter(WVR_norms, Tsky_norms, c=map_series_by_dict(obs_type, color_dict))
 
 # plot the 1-to-1 line
 lower=max(ax.set_xlim()[0], ax.set_ylim()[0])
@@ -127,12 +123,12 @@ upper=min(ax.set_xlim()[1], ax.set_ylim()[1])
 ax.plot([lower, upper],[lower,upper],ls='--', color='black')
 
 # title
-title = 'WVR vs Tsky, all ants '+keywords_title
+title = 'Tsky vs WVR, all ants '+keywords_title
 plt.title(title)
 
 # label
-plt.xlabel('Normalized Tsky')
-plt.ylabel('Normalized WVR')
+plt.xlabel('Normalized WVR')
+plt.ylabel('Normalized Tsky')
 plt.legend(loc='upper left', framealpha=0.5)
 plt.legend(legendhandle,list(color_dict.keys()), loc='upper left', framealpha=0.5)
 plt.savefig('Tsky_WVR_correlation_band10'+keywords_filename+'.pdf', bbox_incehs='tight')

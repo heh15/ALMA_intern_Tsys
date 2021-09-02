@@ -24,14 +24,15 @@ parameters = {}
 par_tclean = {}
 
 
-par_tclean['vis'] = 'uid___A002_Xbe0d4d_X12f5.asdm.sdm.ms.split.cal'
-par_tclean['imagename'] = 'arp220_band10_12m' 
-par_tclean['phasecenter'] = 'J2000 15h34m57.280 23d30m11.5'
+par_tclean['vis'] = 'uid___A002_Xbf792a_X14cc.ms.split.cal'
+par_tclean['imagename'] = 'IRAS16293-B_band9'
+par_tclean['phasecenter'] = 'J2000 16h32m22.62 -24d28m32.4'
+par_tclean['field'] = '4'
 par_tclean['specmode'] = 'mfs'
-par_tclean['spw'] = '17,19,21,23' 
-par_tclean['imsize'] = [180, 180]
+par_tclean['spw'] = '23, 25, 27, 29, 31, 33, 35, 37, 39, 41' 
+par_tclean['imsize'] = [360, 360]
 par_tclean['outframe'] = 'Bary' # default
-par_tclean['cell'] = '0.07arcsec'
+par_tclean['cell'] = '0.05arcsec'
 par_tclean['weighting'] = 'briggs' # default
 par_tclean['robust'] = 0.0
 par_tclean['deconvolver'] = 'hogbom' # default
@@ -44,6 +45,7 @@ par_tclean['threshold'] = 0.0
 par_tclean['threshold_ratio'] = 2.0 # S/N cut ratio. 
 par_tclean['usemask'] = 'auto-multithresh'
 
+# parameters for original 1st observation of calibrated dataset
 parameters['v0'] = copy.deepcopy(par_tclean)
 
 # import the parameters for the calibrated data with modified Tsys
@@ -53,13 +55,13 @@ parameters['v1']['imagename'] = 'arp220_band10_12m_v1'
 
 # import the parameters for the calibrated data with modified Tsys
 parameters['v2'] = copy.deepcopy(par_tclean)
-parameters['v2']['vis'] = 'uid___A002_Xbe0d4d_X12f5_v2.asdm.sdm.ms.split.cal'
-parameters['v2']['imagename'] = 'arp220_band10_12m_v2'
+parameters['v2']['vis'] = 'uid___A002_Xbf792a_X14cc_v2.ms.split.cal'
+parameters['v2']['imagename'] = 'IRAS16293-B_band9_v2'
 
 # import the parameters for the calibrated data with modified Tsys
 parameters['v3'] = copy.deepcopy(par_tclean)
-parameters['v3']['vis'] = 'uid___A002_Xbe0d4d_X12f5_v3.asdm.sdm.ms.split.cal'
-parameters['v3']['imagename'] = 'arp220_band10_12m_v3'
+parameters['v3']['vis'] = 'uid___A002_Xbf792a_X14cc_v3.ms.split.cal'
+parameters['v3']['imagename'] = 'IRAS16293-B_band9_v3'
 
 # modified Tsys, with start Tsys, without gain cal. 
 parameters['v4'] = copy.deepcopy(par_tclean)
@@ -72,11 +74,12 @@ parameters['v4']['imagename'] = 'arp220_band10_12m_v4'
 start = time.time()
 
 # # make dirty imgage 
-# key = 'v4'
+# key = 'v3'
 # delmod(vis = parameters[key]['vis'])
 # tclean(vis = parameters[key]['vis'],
 #        imagename = parameters[key]['imagename'],
 #        phasecenter = parameters[key]['phasecenter'],
+#        field = parameters[key]['field'], 
 #        specmode = parameters[key]['specmode'],
 #        spw = parameters[key]['spw'],
 #        outframe = parameters[key]['outframe'],
@@ -94,7 +97,7 @@ start = time.time()
 
 
 # make dirty image for first half of scans
-key = 'v4'
+key = 'v0'
 delmod(vis = parameters[key]['vis'])
 tclean(vis = parameters[key]['vis'],
        imagename = parameters[key]['imagename']+'_1st',
@@ -109,7 +112,7 @@ tclean(vis = parameters[key]['vis'],
        deconvolver = parameters[key]['deconvolver'],
        gridder = parameters[key]['gridder'],
        niter = 0,
-       scan = '7,9,13,17', 
+       scan = '9,12,16,19', 
        cyclefactor = parameters[key]['cyclefactor'],
        pblimit = parameters[key]['pblimit'],
        interactive = parameters[key]['interactive'],
@@ -129,7 +132,7 @@ tclean(vis = parameters[key]['vis'],
        deconvolver = parameters[key]['deconvolver'],
        gridder = parameters[key]['gridder'],
        niter = 0,
-       scan = '21,25,29,33',
+       scan = '23,26,30,33',
        cyclefactor = parameters[key]['cyclefactor'],
        pblimit = parameters[key]['pblimit'],
        interactive = parameters[key]['interactive'],

@@ -16,6 +16,7 @@ else:
 
 # Tsys spectral windows
 spw_Tsys = 17 # Tsys spectral window
+spw_Tsys_id = int((spw_Tsys-17) / 2)
 if spw_Tsys == -1:
     spwTsys_txt = 'avg'
     average_spw = True
@@ -305,7 +306,10 @@ for iant in iants:
     # select specific antenna, average over polarizations and spws
     tau_mean = np.mean(tau, axis=0)
     tau_mean = tau_mean[np.where(antennaName==antenna_name)]
-    tau_mean = np.mean(tau_mean.reshape(-1, 4), axis=1) 
+   if spw_Tsys == -1:
+        tau_mean = np.mean(tau_mean.reshape(-1, 4), axis=1)
+    else:
+        tau_mean = tau_mean.reshape(-1, 4)[:,spw_Tsys_id]
     tb.close()
 
     ### read the Tsys

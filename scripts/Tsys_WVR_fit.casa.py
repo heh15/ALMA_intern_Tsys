@@ -73,6 +73,12 @@ for i in range(np.shape(Tsys)[1]):
     fit_results[spw]['coeff'] = fit_coeff
     fit_results[spw]['rel_err'] = fit_err_rel
 
+## add the basic information of the fit_results
+fit_results['info'] = {}
+fit_results['info']['WVR chan'] = WVR_chan
+fit_results['info']['avg time'] = Tsys_table['info']['avg time']
+fit_results['info']['norm scans'] = normScans
+
 ## output the file into a pickle file
 with open(fitfile, 'wb') as handle:
     pickle.dump(fit_results, handle)

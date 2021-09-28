@@ -64,7 +64,7 @@ with open (filename, 'rb') as pickle_file:
 
 # basic information
 iants = Tsys_table['iant']
-obs_type = Tsys_table['obs_type']
+obs_types = Tsys_table['obs_type']
 
 # import the matched Tsys and WVR
 WVR_means = Tsys_table['WVR_means'][:,WVR_chan]
@@ -75,7 +75,7 @@ WVR_norms = normalize_data(WVR_means, iants, obs_type, normScans=normScans)
 
 Tsys_norms = np.full(np.shape(Tsys), fill_value=np.nan)
 for i in range(np.shape(Tsys)[1]):
-    Tsys_norms[:,i] = normalize_data(Tsys[:,i], iants, obs_type, normScans=normScans)
+    Tsys_norms[:,i] = normalize_data(Tsys[:,i], iants, obs_types, normScans=normScans)
 
 ## fit the linear relation between normalize Tsys and WVR
 fit_results = dict.fromkeys([17,19,21,23])

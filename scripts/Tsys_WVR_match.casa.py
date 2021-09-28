@@ -239,6 +239,7 @@ dat = tb.query('ANTENNA1==ANTENNA2 && DATA_DESC_ID==%d && SCAN_NUMBER not in %s'
 WVR = np.real(dat.getcol('DATA'))
 WVR_time = dat.getcol('TIME').reshape(-1, nants)[:,0]
 WVR_scans = dat.getcol('SCAN_NUMBER').reshape(-1, nants)[:,0]
+dat.close()
 tb.close()
 
 WVR_temp = WVR[0].reshape(4, -1, nants)
@@ -277,6 +278,7 @@ Tsys_spectrum = tb3.getcol('TSYS_SPECTRUM')
 Trx_spectrum = tb3.getcol('TRX_SPECTRUM')
 Tsky_spectrum = tb3.getcol('TSKY_SPECTRUM')
 Tsys_spws = tb3.getcol('SPECTRAL_WINDOW_ID')
+tb3.close()
 tb.close()
 
 Tsys = average_Tsys(Tsys_spectrum).reshape(-1, 4)

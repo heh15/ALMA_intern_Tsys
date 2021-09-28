@@ -8,19 +8,39 @@ To fit the linear relation between the normalized WVR data with Tsys data
 import pickle
 import numpy as np
 
-def normalize_array(array, iants, obs_type, normScans=[0,0,0]):
+def normalize_data(data, iants, obs_types, normScans=[0,0,0]):
+    '''
+    Normalize the data by the first measurement of each antenna
+    and each type of target (bandpass, phase and science)
+    ---
+    Parameters:
+    data: np.1darray
+        The data to be normalized. 
+    iants:np.1darray
+        Array of the antennas corresponding to the data
+    obs_type: np.1darray
+        Arrray of observation types ('bandpass', 'phase' and 
+        'science'. 
+    normScans: list, optional
+        Specify which measurement (1st, 2nd, ...) for each 
+        type of observation of each antenna to be normalized to.
+    ---
+    Return:
+    data_norm: np.1darray
+        The normalized data. 
+    '''
 
-    array_norm = np.full(np.shape(array), fill_value=np.nan)
+    data_norm = np.full(np.shape(data), fill_value=np.nan)
     iants_uq = np.unique(iants)
-    obsType_uq = np.unique(obs_type)
+    obsTypes_uq = np.unique(obs_types)
     for iant in iants_uq:
-        for i, obs in enumerate(obsType_uq):
-            conditions = ((iants == iant) & (obs_type==obs))
+        for i, obs in enumerate(obsTypes_uq):
+            conditions = ((iants == iant) & (obs_types==obs))
             indices = np.where(conditions)
-            array_sub = array[indices]
-            array_norm[indices] = array_sub / array_sub[normScans[i]]
+            data_sub = data[indices]
+            data_norm[indices] = data_sub / data_sub[normScans[i]]
 
-    return array_norm
+    return data_norm
 
 ###########################################################
 # basic settings
@@ -51,11 +71,11 @@ WVR_means = Tsys_table['WVR_means'][:,WVR_chan]
 Tsys = Tsys_table['Tsys']
 
 ## normalize Tsys and WVR data.
-WVR_norms = normalize_array(WVR_means, iants, obs_type, normScans=normScans)
+WVR_norms = normalize_data(WVR_means, iants, obs_type, normScans=normScans)
 
 Tsys_norms = np.full(np.shape(Tsys), fill_value=np.nan)
 for i in range(np.shape(Tsys)[1]):
-    Tsys_norms[:,i] = normalize_array(Tsys[:,i], iants, obs_type, normScans=normScans)
+    Tsys_norms[:,i] = normalize_data(Tsys[:,i], iants, obs_type, normScans=normScans)
 
 ## fit the linear relation between normalize Tsys and WVR
 fit_results = dict.fromkeys([17,19,21,23])

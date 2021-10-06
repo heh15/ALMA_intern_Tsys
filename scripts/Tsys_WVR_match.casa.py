@@ -5,7 +5,7 @@ import numpy as np
 ###########################################################
 # basic settings
 
-vis = 'uid___A002_Xec4ed2_X912.ms'
+vis = 'uid___A002_Xdab261_Xefb2.ms'
 
 # number of antennas 
 msmd.open(vis)
@@ -235,7 +235,10 @@ tb.open(vis)
 spw_WVR = 4
 ddid = spw_WVR
 scan_exclude = list(scan_checksource)
-dat = tb.query('ANTENNA1==ANTENNA2 && DATA_DESC_ID==%d && SCAN_NUMBER not in %s'%(ddid,scan_exclude))
+if len(scan_exclude) !=0:
+    dat = tb.query('ANTENNA1==ANTENNA2 && DATA_DESC_ID==%d && SCAN_NUMBER not in %s'%(ddid,scan_exclude))
+else:
+    dat = tb.query('ANTENNA1==ANTENNA2 && DATA_DESC_ID==%d'%(ddid))
 WVR = np.real(dat.getcol('DATA'))
 WVR_time = dat.getcol('TIME').reshape(-1, nants)[:,0]
 WVR_scans = dat.getcol('SCAN_NUMBER').reshape(-1, nants)[:,0]

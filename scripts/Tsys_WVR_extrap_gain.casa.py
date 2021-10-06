@@ -56,6 +56,7 @@ WVR_table['info'] = dict.fromkeys(info_columns)
 WVR_table['info']['WVR chan'] = chan_WVR
 WVR_table['info']['Tsys spw'] = Tsys_spws
 WVR_table['info']['avg time'] = timebin
+WVR_table['info']['norm scans'] = normScans
 
 # filename of the output pickle file
 filename_WVR = 'WVR_gaintable_chanWVR'+str(chan_WVR)+'_avgtime'+str(timebin)+'.pkl'
@@ -305,7 +306,6 @@ obs_types_WVR[isin_bpass_WVR] = 'bandpass'
 
 ### normalize the WVR and extrapolate Tsys based on the start of Tsys
 
-# normscans = [phasenormscan, scinormscan, bpassnormscan]
 # normalize the WVR data
 WVR_norm_binned = np.full(np.shape(WVR_sinchan_binned), np.nan)
 obsTypes_uq = np.unique(obs_types)
@@ -319,7 +319,6 @@ for i, obs in enumerate(obsTypes_uq):
 
 # calculate the normalized Tsys from normalized WVR
 Tsys_reshaped = Tsys.reshape(-1,nants,4)
-# Tsys_reshaped = np.moveaxis(Tsys_reshaped, 2, 0)
 Tsys_norm_ext = np.full(np.shape(WVR_norm_binned)+(4,), np.nan)
 for i, spw in enumerate(Tsys_spws):
     Tsys_norm_ext[:,:,i] = fit_results[spw]['coeff'][0] * WVR_norm_binned +\
@@ -336,7 +335,6 @@ for i, obs in enumerate(obsTypes_uq):
     Tsys_ext[isin_obs_WVR] = np.einsum('jk,ijk->ijk', Tsys_start_value, 
             Tsys_norm_ext[isin_obs_WVR])
     Tsys_start[isin_obs_WVR] = Tsys_start_value
-    print(Tsys_start_value[10,0])
 
     # match the original Tsys with the extrapolated Tsys
     scan_type = scan_ATM[isin_obs] + 1
@@ -354,6 +352,7 @@ for i, obs in enumerate(obsTypes_uq):
 nan_mask = np.isnan(WVR_norm_binned[:,0])
 WVR_time_binned = WVR_time_binned[~nan_mask]
 WVR_scans_binned = WVR_scans_binned[~nan_mask]
+WVR_field_binned = WVR_field_binned[~nan_mask]
 obs_types_WVR = obs_types_WVR[~nan_mask]
 WVR_sinchan_binned = WVR_sinchan_binned[~nan_mask,:]
 WVR_norm_binned = WVR_norm_binned[~nan_mask,:]
@@ -373,6 +372,7 @@ Tsys_orig_out = Tsys_orig.reshape(-1,4)
 ### write the WVR table into the dictionary.
 WVR_table['iant'] = np.tile(np.arange(nants), len(WVR_time_binned))
 WVR_table['scan'] = np.repeat(WVR_scans_binned, nants)
+WVR_table['field'] = np.repeat(WVR_field_binned, nants)
 WVR_table['obs_type'] = np.repeat(obs_types_WVR, nants)
 WVR_table['WVR_time'] = np.repeat(WVR_time_binned, nants)
 WVR_table['WVR_data'] = WVR_data_out

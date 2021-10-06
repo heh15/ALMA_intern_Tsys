@@ -350,6 +350,18 @@ for i, obs in enumerate(obsTypes_uq):
     if len(inds_matched) > 0:
         Tsys_orig[inds_matched] = Tsys_reshaped[isin_obs][inds_reverse[inds_matched]]
 
+# remove the nan values in WVR_norms_binned
+nan_mask = np.isnan(WVR_norm_binned[:,0])
+WVR_time_binned = WVR_time_binned[~nan_mask]
+WVR_scans_binned = WVR_scans_binned[~nan_mask]
+obs_types_WVR = obs_types_WVR[~nan_mask]
+WVR_sinchan_binned = WVR_sinchan_binned[~nan_mask,:]
+WVR_norm_binned = WVR_norm_binned[~nan_mask,:]
+Tsys_norm_ext = Tsys_norm_ext[~nan_mask,:,:]
+Tsys_ext = Tsys_ext[~nan_mask,:,:]
+Tsys_start = Tsys_start[~nan_mask,:,:]
+Tsys_orig = Tsys_orig[~nan_mask,:,:]
+
 # remove the axis for different antennas. 
 WVR_data_out = WVR_sinchan_binned.flatten()
 WVR_norm_out = WVR_norm_binned.flatten()
@@ -376,13 +388,13 @@ with open(filename_WVR, 'wb') as handle:
 stop = time.time()
 count_time(stop, start)
 
-# # test
-# iants = WVR_table['iant']
-# Tsys_sinant = Tsys_ext[:,10,0]
-# Tsys_orig_sinant = Tsys_orig[:,10,0]
-# time_sinant = WVR_table['WVR_time'][np.where(iants==10)]
-# fig = plt.figure()
-# plt.scatter(time_sinant, Tsys_sinant, color='blue')
-# plt.scatter(time_sinant, Tsys_orig_sinant, color='red')
-# plt.scatter(time_Tsys, Tsys_reshaped[:,10,0],color='red')
+# test
+iants = WVR_table['iant']
+Tsys_sinant = Tsys_ext[:,10,0]
+Tsys_orig_sinant = Tsys_orig[:,10,0]
+time_sinant = WVR_table['WVR_time'][np.where(iants==10)]
+fig = plt.figure()
+plt.scatter(time_sinant, Tsys_sinant, color='blue')
+plt.scatter(time_sinant, Tsys_orig_sinant, color='red')
+plt.scatter(time_Tsys, Tsys_reshaped[:,10,0],color='red')
 

@@ -71,7 +71,7 @@ WVR_means = Tsys_table['WVR_means'][:,WVR_chan]
 Tsys = Tsys_table['Tsys']
 
 ## normalize Tsys and WVR data.
-WVR_norms = normalize_data(WVR_means, iants, obs_type, normScans=normScans)
+WVR_norms = normalize_data(WVR_means, iants, obs_types, normScans=normScans)
 
 Tsys_norms = np.full(np.shape(Tsys), fill_value=np.nan)
 for i in range(np.shape(Tsys)[1]):

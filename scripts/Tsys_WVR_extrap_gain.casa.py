@@ -281,7 +281,7 @@ WVR_field_binned[np.isnan(WVR_field_binned)] = -1
 WVR_field_binned = WVR_field_binned.astype(int)
 
 ## remove the nan values in the rebinned data
-indices_nan = np.unique(np.isnan(WVR_sinchan_binned)[0])
+indices_nan = np.unique(np.where(np.isnan(WVR_sinchan_binned))[0])
 WVR_sinchan_binned[indices_nan,:] = np.nan 
 WVR_time_binned = WVR_time_binned[~np.isnan(WVR_sinchan_binned[:,0])]
 WVR_scans_binned = WVR_scans_binned[~np.isnan(WVR_sinchan_binned[:,0])]

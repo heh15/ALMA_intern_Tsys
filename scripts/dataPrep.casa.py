@@ -1,4 +1,7 @@
+'''
+run the following command in the shell to download the data:
 asdmExport uid://A002/Xbf792a/X14cc
+'''
 
 import analysisUtils as aU
 es = aU.stuffForScienceDataReduction()

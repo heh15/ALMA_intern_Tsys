@@ -5,7 +5,7 @@ import numpy as np
 ###########################################################
 # basic settings
 
-vis = 'uid___A002_Xdab261_Xefb2.ms'
+vis = 'uid___A002_Xec4ed2_X912.ms'
 
 # number of antennas 
 msmd.open(vis)
@@ -320,7 +320,7 @@ obs_type[isin_bpass] = 'bandpass'
 WVR_means = np.full(np.shape(scan_ATM)+np.shape(WVR_temp)[1:], fill_value=np.nan)
 isin_obsrs = [isin_phase, isin_sci, isin_bpass]
 for i, isin_obs in enumerate(isin_obsrs):
-    if len(isin_obs) !=0:
+    if len(isin_obs[0]) !=0:
         WVR_time_obs = WVR_time[isin_obsrs_WVR[i]]
         WVR_obs = WVR_temp[isin_obsrs_WVR[i]]
         ind = find_nearest(WVR_time_obs, time_Tsys_avg[isin_obs])

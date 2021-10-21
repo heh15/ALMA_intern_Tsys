@@ -1,6 +1,7 @@
 import time
 import pickle
 import matplotlib.pyplot as plt
+import numpy as np
 
 ###########################################################
 # basic settings
@@ -183,7 +184,7 @@ os.system('cp -r '+vis_tsys_in+' '+vis_tsys_out)
 
 tb.open(vis_tsys_out, nomodify=False)
 nrows = tb.nrows()
-tb.removerows(range(nrows))
+tb.removerows(np.array(range(nrows)))
 tb.flush()
 tb.close()
 
@@ -196,7 +197,7 @@ os.system('cp -r '+vis_amp_gain+' '+vis_tsys_gain)
 
 tb.open(vis_tsys_gain, nomodify=False)
 nrows = tb.nrows()
-tb.removerows(range(nrows))
+tb.removerows(np.array(range(nrows)))
 tb.putkeyword("MSName", vis) 
 tb.flush()
 tb.close()

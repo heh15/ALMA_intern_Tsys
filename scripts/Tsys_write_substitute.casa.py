@@ -251,7 +251,7 @@ os.system('cp -r '+vis_tsys_in+' '+vis_tsys_out)
 # remove the data
 tb.open(vis_tsys_out, nomodify=False)
 nrows = tb.nrows()
-tb.removerows(range(nrows))
+tb.removerows(np.array(range(nrows)))
 tb.flush()
 tb.close()
 

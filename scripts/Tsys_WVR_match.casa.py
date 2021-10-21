@@ -40,7 +40,7 @@ Tsys_table = dict.fromkeys(columns)
 # info columns
 info_columns = ['WVR chan','Tsys spw','avg time']
 Tsys_table['info'] = dict.fromkeys(info_columns)
-Tsys_table['vis'] = vis
+Tsys_table['info']['vis'] = vis
 Tsys_table['info']['WVR chan'] = np.array([0,1,2,3])
 Tsys_table['info']['Tsys spw'] = np.array([17,19,21,23])
 Tsys_table['info']['avg time'] = time_avg

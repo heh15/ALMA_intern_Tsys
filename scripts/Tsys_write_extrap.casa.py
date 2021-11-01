@@ -2,14 +2,15 @@ import time
 import pickle
 import matplotlib.pyplot as plt
 import numpy as np
+from casarecipes.almahelpers import tsysspwmap
 
 ###########################################################
 # basic settings
 
-vis = 'uid___A002_Xec4ed2_X912.ms'
+vis = 'uid___A002_Xda1250_X2387.ms'
 
 filename_Tsys = 'Tsys_WVR_matched_avgTime10.pkl' 
-filename_gain = 'WVR_gaintable_chanWVR3_avgtime10.pkl' 
+filename_gain = 'WVR_gaintable_chanWVR0_avgtime10.pkl' 
 
 # number of antennas 
 msmd.open(vis)
@@ -25,6 +26,16 @@ scan_checksource = msmd.scansforintent('*OBSERVE_CHECK_SOURCE*')
 scan_bpass = msmd.scansforintent('*CALIBRATE_BANDPASS*')
 scan_sci = msmd.scansforintent('*OBSERVE_TARGET*')
 msmd.done()
+
+# science spws
+msmd.open(vis)
+targetspws = msmd.spwsforintent('OBSERVE_TARGET*')
+sciencespws = []                                      
+for myspw in targetspws:                               
+    if msmd.nchan(myspw)>4:
+        sciencespws.append(myspw)
+sciencespws = np.array(sciencespws).astype(int)
+msmd.close()
 
 ###########################################################
 # functions
@@ -189,12 +200,13 @@ tb.flush()
 tb.close()
 
 ### create a new gain table
-# copy the info from amplitude gain table
+# copy the table structure from amplitude gain table
 vis_amp_gain = vis+'.split.ampli_inf'
 vis_tsys_gain = vis.replace('.ms', '_extrap_tsys_WVR.gcal') 
 rmtables(vis_tsys_gain)
 os.system('cp -r '+vis_amp_gain+' '+vis_tsys_gain)
 
+# remove all the rows in the current table
 tb.open(vis_tsys_gain, nomodify=False)
 nrows = tb.nrows()
 tb.removerows(np.array(range(nrows)))
@@ -221,12 +233,21 @@ gain_scans = np.tile(WVR_table['scan'],4)
 gain_data = np.transpose(WVR_table['Tsys_norm']).flatten()
 gain_data = gain_data[np.newaxis,np.newaxis,:]
 
+### change the spws from Tsys spws to corresponding science spws
+tsysmap = np.array(tsysspwmap(vis=vis, tsystable=vis_tsys_in, tsysChanTol = 1))
+spws_all = np.arange(0, len(tsysmap),1).astype(int)
+tsysmap_sci = tsysmap[sciencespws]
+sci_tsysmap = np.full(4, fill_value=0)
+for i, spw in enumerate(sci_tsysmap):
+    sci_tsysmap[i] = sciencespws[np.where(tsysmap_sci==spws[i])]
+gain_spws = np.repeat(sci_tsysmap, len(WVR_time_binned))
+
 ### write the normalized WVR data into gain table
 tb.open(vis_tsys_gain, nomodify=False)
 tb.addrows(len(gain_time))
 tb.putcol('TIME', gain_time)
 tb.putcol('FIELD_ID', gain_fields)
-tb.putcol('SPECTRAL_WINDOW_ID', np.repeat(spws, len(WVR_time_binned)))
+tb.putcol('SPECTRAL_WINDOW_ID', gain_spws)
 tb.putcol('ANTENNA1', gain_iants)
 tb.putcol('ANTENNA2', np.full(np.shape(gain_time), -1))
 tb.putcol('INTERVAL', np.full(np.shape(gain_time), 0))

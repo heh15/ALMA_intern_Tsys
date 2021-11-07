@@ -219,6 +219,7 @@ gain_fields = np.tile(WVR_table['field'],4)
 gain_iants = np.tile(WVR_table['iant'],4)
 gain_scans = np.tile(WVR_table['scan'],4)
 gain_data = np.transpose(WVR_table['Tsys_norm']).flatten()
+gain_data = np.sqrt(1/gain_data)
 gain_data = gain_data[np.newaxis,np.newaxis,:]
 
 ### write the normalized WVR data into gain table

@@ -42,7 +42,7 @@ def normalize_data(data, iants, obs_types, normScans=[0,0,0]):
 
     return data_norm
 
-def select_ATM(data, iants, ATM_ids):
+def select_ATM(data, iants, ATM_No):
     '''
     Select the data of nth ATM for each antenna
     -------
@@ -52,7 +52,7 @@ def select_ATM(data, iants, ATM_ids):
 spws_all = np.arange(0,len(tsysmap),1).astype(int)
     iants: np.1darray
         Array of antenna ids associated with data
-    ATM_ids: list
+    ATM_No: list
         List of nth ATM cal to be selected
     ------
     Return
@@ -61,9 +61,9 @@ spws_all = np.arange(0,len(tsysmap),1).astype(int)
     '''
     iants_uq = np.unique(iants)
     nants = len(iants_uq)
-    data_temp = data.reshape(nants, -1)
+    data_temp = data.reshape(-1, nants)
     
-    data_sel = data_temp[:, ATM_ids]
+    data_sel = data_temp[ATM_No, :]
     data_sel = data_sel.flatten()
     
     return data_sel
@@ -78,7 +78,7 @@ WVR_chan = 0
 normScans = [0,0,0]
 normScans_txt = ''.join([str(i) for i in normScans])
 
-ATM_ids = [0,3,4]
+ATM_No = [1,2,6,7]
 
 fitfile = 'Tsys_WVR_part_fitted_WVRchan'+str(WVR_chan)+'_normScans'+\
         normScans_txt+'.pkl'
@@ -98,6 +98,9 @@ obs_types = Tsys_table['obs_type']
 WVR_means = Tsys_table['WVR_means'][:,WVR_chan]
 Tsys = Tsys_table['Tsys']
 
+# exclude the bad antennas
+Tsys[np.where(iants==9),:] = np.nan
+
 ## normalize Tsys and WVR data.
 WVR_norms = normalize_data(WVR_means, iants, obs_types, normScans=normScans)
 
@@ -106,10 +109,10 @@ for i in range(np.shape(Tsys)[1]):
     Tsys_norms[:,i] = normalize_data(Tsys[:,i], iants, obs_types, normScans=normScans)
 
 ## Select data from nth ATM cal for each antenna
-WVR_norms_sel = select_ATM(WVR_norms, iants, ATM_ids)
+WVR_norms_sel = select_ATM(WVR_norms, iants, ATM_No)
 Tsys_norms_sel = np.full((len(WVR_norms_sel),4),fill_value=np.nan)
 for i in range(4):
-    Tsys_norms_sel[:,i] = select_ATM(Tsys_norms[:,i],iants,ATM_ids)
+    Tsys_norms_sel[:,i] = select_ATM(Tsys_norms[:,i],iants,ATM_No)
 
 ## fit the linear relation between normalize Tsys and WVR
 fit_results = dict.fromkeys([17,19,21,23])
@@ -132,7 +135,7 @@ fit_results['info'] = {}
 fit_results['info']['WVR chan'] = WVR_chan
 fit_results['info']['avg time'] = Tsys_table['info']['avg time']
 fit_results['info']['norm scans'] = normScans
-fit_results['info']['ATM IDs'] = ATM_ids 
+fit_results['info']['No. ATM'] = ATM_No 
 
 ## output the file into a pickle file
 with open(fitfile, 'wb') as handle:

@@ -78,7 +78,7 @@ WVR_chan = 0
 normScans = [0,0,0]
 normScans_txt = ''.join([str(i) for i in normScans])
 
-ATM_No = [1,2,6,7]
+ATM_No = [1,2,9,10]
 
 fitfile = 'Tsys_WVR_part_fitted_WVRchan'+str(WVR_chan)+'_normScans'+\
         normScans_txt+'.pkl'
@@ -89,6 +89,8 @@ fitfile = 'Tsys_WVR_part_fitted_WVRchan'+str(WVR_chan)+'_normScans'+\
 ##  load the data
 with open (filename, 'rb') as pickle_file:
     Tsys_table = pickle.load(pickle_file)
+Tsys_spws_set = Tsys_table['info']['Tsys spw']
+Tsys_spws_num = len(Tsys_spws_set)
 
 # basic information
 iants = Tsys_table['iant']
@@ -97,9 +99,6 @@ obs_types = Tsys_table['obs_type']
 # import the matched Tsys and WVR
 WVR_means = Tsys_table['WVR_means'][:,WVR_chan]
 Tsys = Tsys_table['Tsys']
-
-# exclude the bad antennas
-Tsys[np.where(iants==9),:] = np.nan
 
 ## normalize Tsys and WVR data.
 WVR_norms = normalize_data(WVR_means, iants, obs_types, normScans=normScans)
@@ -110,17 +109,16 @@ for i in range(np.shape(Tsys)[1]):
 
 ## Select data from nth ATM cal for each antenna
 WVR_norms_sel = select_ATM(WVR_norms, iants, ATM_No)
-Tsys_norms_sel = np.full((len(WVR_norms_sel),4),fill_value=np.nan)
-for i in range(4):
+Tsys_norms_sel = np.full((len(WVR_norms_sel),Tsys_spws_num),fill_value=np.nan)
+for i in range(len(Tsys_spws_set)):
     Tsys_norms_sel[:,i] = select_ATM(Tsys_norms[:,i],iants,ATM_No)
 
 ## fit the linear relation between normalize Tsys and WVR
-fit_results = dict.fromkeys([17,19,21,23])
+fit_results = dict.fromkeys(list(Tsys_spws_set))
 for key in fit_results.keys():
     fit_results[key]= dict.fromkeys(['coeff','rel_err'])
 
-for i in range(np.shape(Tsys)[1]):
-    spw = int(17 + 2*i)
+for i, spw in enumerate(Tsys_spws_set):
     xdata = WVR_norms_sel; ydata = Tsys_norms_sel[:,i]
     idx_nnan = ((~np.isnan(xdata)) & (~np.isnan(ydata)))
     results = np.polyfit(xdata[idx_nnan], ydata[idx_nnan], 1, full=True)

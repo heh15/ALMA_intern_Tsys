@@ -61,6 +61,7 @@ fitfile = 'Tsys_WVR_fitted_WVRchan'+str(WVR_chan)+'_normScans'+\
 ##  load the data
 with open (filename, 'rb') as pickle_file:
     Tsys_table = pickle.load(pickle_file)
+Tsys_spws_set = Tsys_table['info']['Tsys spw']
 
 # basic information
 iants = Tsys_table['iant']
@@ -78,12 +79,11 @@ for i in range(np.shape(Tsys)[1]):
     Tsys_norms[:,i] = normalize_data(Tsys[:,i], iants, obs_types, normScans=normScans)
 
 ## fit the linear relation between normalize Tsys and WVR
-fit_results = dict.fromkeys([17,19,21,23])
+fit_results = dict.fromkeys(list(Tsys_spws_set))
 for key in fit_results.keys():
     fit_results[key]= dict.fromkeys(['coeff','rel_err'])
 
-for i in range(np.shape(Tsys)[1]):
-    spw = int(17 + 2*i)
+for i, spw in enumerate(Tsys_spws_set):
     xdata = WVR_norms; ydata = Tsys_norms[:,i]
     idx_nnan = ((~np.isnan(xdata)) & (~np.isnan(ydata)))
     results = np.polyfit(xdata[idx_nnan], ydata[idx_nnan], 1, full=True)

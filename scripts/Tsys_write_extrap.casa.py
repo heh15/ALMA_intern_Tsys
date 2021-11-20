@@ -6,10 +6,10 @@ import numpy as np
 ###########################################################
 # basic settings
 
-vis = 'uid___A002_Xec4ed2_X912.ms'
+vis = 'uid___A002_Xed9025_X769c.ms'
 
 filename_Tsys = 'Tsys_WVR_matched_avgTime10.pkl' 
-filename_gain = 'WVR_gaintable_chanWVR3_avgtime10.pkl' 
+filename_gain = 'WVR_gaintable_chanWVR0_avgtime10.pkl' 
 
 # number of antennas 
 msmd.open(vis)
@@ -205,7 +205,7 @@ tb.close()
 ### read the information of the Tsys table
 with open(filename_Tsys,'rb') as pickle_file:
     Tsys_table = pickle.load(pickle_file)
-spws = np.array(Tsys_table['info']['Tsys spw'])
+Tsys_spws_set = np.array(Tsys_table['info']['Tsys spw'])
 iants = Tsys_table['iant']
 obs_types = Tsys_table['obs_type'][np.where(iants==0)]
 obsTypes_uq = np.unique(obs_types)
@@ -214,10 +214,10 @@ obsTypes_uq = np.unique(obs_types)
 with open(filename_gain, 'rb') as pickle_file:
     WVR_table = pickle.load(pickle_file)
 WVR_time_binned = WVR_table['WVR_time']
-gain_time = np.tile(WVR_table['WVR_time'],4)
-gain_fields = np.tile(WVR_table['field'],4)
-gain_iants = np.tile(WVR_table['iant'],4)
-gain_scans = np.tile(WVR_table['scan'],4)
+gain_time = np.tile(WVR_table['WVR_time'],len(Tsys_spws_set))
+gain_fields = np.tile(WVR_table['field'],len(Tsys_spws_set))
+gain_iants = np.tile(WVR_table['iant'],len(Tsys_spws_set))
+gain_scans = np.tile(WVR_table['scan'],len(Tsys_spws_set))
 gain_data = np.transpose(WVR_table['Tsys_norm']).flatten()
 gain_data = np.sqrt(1/gain_data)
 gain_data = gain_data[np.newaxis,np.newaxis,:]
@@ -227,7 +227,7 @@ tb.open(vis_tsys_gain, nomodify=False)
 tb.addrows(len(gain_time))
 tb.putcol('TIME', gain_time)
 tb.putcol('FIELD_ID', gain_fields)
-tb.putcol('SPECTRAL_WINDOW_ID', np.repeat(spws, len(WVR_time_binned)))
+tb.putcol('SPECTRAL_WINDOW_ID', np.repeat(Tsys_spws_set, len(WVR_time_binned)))
 tb.putcol('ANTENNA1', gain_iants)
 tb.putcol('ANTENNA2', np.full(np.shape(gain_time), -1))
 tb.putcol('INTERVAL', np.full(np.shape(gain_time), 0))
@@ -261,8 +261,8 @@ tb.close()
 ## read the start Tsys into the new Tsys table. 
 # get the index of Tsys to be extracted
 idx1d = np.arange(0,len(Tsys_time),1)
-idx1d_reshaped = idx1d.reshape(4,-1,nants)
-idx1d_extrc = np.full((4,len(obsTypes_uq),nants),np.nan)
+idx1d_reshaped = idx1d.reshape(len(Tsys_spws_set),-1,nants)
+idx1d_extrc = np.full((len(Tsys_spws_set),len(obsTypes_uq),nants),np.nan)
 for i, obs in enumerate(obsTypes_uq):
     isin_obs = np.where(obs_types==obs)
     idx1d_extrc[:,i,:] = idx1d_reshaped[:,isin_obs[0][normScans[i]],:]

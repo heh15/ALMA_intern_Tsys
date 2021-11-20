@@ -6,7 +6,7 @@ import pickle
 ###########################################################
 # basic settings
 
-vis = 'uid___A002_Xda1250_X2387.ms'
+vis = 'uid___A002_Xed9025_X769c.ms'
 filename_match = 'Tsys_WVR_matched_avgTime10.pkl'
 filename_fit = 'Tsys_WVR_part_fitted_WVRchan0_normScans000.pkl' 
 
@@ -31,7 +31,8 @@ msmd.done()
 with open(filename_match, 'rb') as pickle_file:
     Tsys_table = pickle.load(pickle_file)
 timebin = Tsys_table['info']['avg time']
-Tsys_spws = Tsys_table['info']['Tsys spw']
+Tsys_spws_set = Tsys_table['info']['Tsys spw']
+Tsys_spws_num = len(Tsys_spws_set)
 
 obs_types = Tsys_table['obs_type'].reshape(-1,nants)[:,0]
 time_Tsys = Tsys_table['time_Tsys'].reshape(-1,nants)[:,0]
@@ -42,7 +43,6 @@ with open(filename_fit, 'rb') as pickle_file:
     fit_results = pickle.load(pickle_file)
 chan_WVR = fit_results['info']['WVR chan']
 normScans = fit_results['info']['norm scans']
-ATM_No = fit_results['info']['No. ATM']
 
 #############################
 # WVR gain table information
@@ -55,10 +55,9 @@ WVR_table['info'] = {}
 info_columns = ['WVR chan','Tsys spw','avg time']
 WVR_table['info'] = dict.fromkeys(info_columns)
 WVR_table['info']['WVR chan'] = chan_WVR
-WVR_table['info']['Tsys spw'] = Tsys_spws
+WVR_table['info']['Tsys spw'] = Tsys_spws_set
 WVR_table['info']['avg time'] = timebin
 WVR_table['info']['norm scans'] = normScans
-WVR_table['info']['No. ATM'] = ATM_No 
 
 # filename of the output pickle file
 filename_WVR = 'WVR_partextrap_gaintable_chanWVR'+str(chan_WVR)+'_avgtime'+str(timebin)+'.pkl'
@@ -320,16 +319,16 @@ for i, obs in enumerate(obsTypes_uq):
     WVR_norm_binned[isin_obs_WVR] = WVR_obs / WVR_sinchan_binned[ind0]
 
 # calculate the normalized Tsys from normalized WVR
-Tsys_reshaped = Tsys.reshape(-1,nants,4)
-Tsys_norm_ext = np.full(np.shape(WVR_norm_binned)+(4,), np.nan)
-for i, spw in enumerate(Tsys_spws):
+Tsys_reshaped = Tsys.reshape(-1,nants,Tsys_spws_num)
+Tsys_norm_ext = np.full(np.shape(WVR_norm_binned)+(Tsys_spws_num,), np.nan)
+for i, spw in enumerate(Tsys_spws_set):
     Tsys_norm_ext[:,:,i] = fit_results[spw]['coeff'][0] * WVR_norm_binned +\
             fit_results[spw]['coeff'][1]
 
 # calculate the extrapolated Tsys.
-Tsys_ext = np.full(np.shape(WVR_norm_binned)+(4,), np.nan)
-Tsys_start = np.full(np.shape(WVR_norm_binned)+(4,), np.nan)
-Tsys_orig = np.full(np.shape(WVR_norm_binned)+(4,), np.nan)
+Tsys_ext = np.full(np.shape(WVR_norm_binned)+(Tsys_spws_num,), np.nan)
+Tsys_start = np.full(np.shape(WVR_norm_binned)+(Tsys_spws_num,), np.nan)
+Tsys_orig = np.full(np.shape(WVR_norm_binned)+(Tsys_spws_num,), np.nan)
 for i, obs in enumerate(obsTypes_uq):
     isin_obs = np.where(obs_types == obs)[0]
     isin_obs_WVR = np.where(obs_types_WVR == obs)[0]
@@ -366,10 +365,10 @@ Tsys_orig = Tsys_orig[~nan_mask,:,:]
 # remove the axis for different antennas. 
 WVR_data_out = WVR_sinchan_binned.flatten()
 WVR_norm_out = WVR_norm_binned.flatten()
-Tsys_norm_out = Tsys_norm_ext.reshape(-1,4)
-Tsys_ext_out = Tsys_ext.reshape(-1,4)
-Tsys_start_out = Tsys_start.reshape(-1,4)
-Tsys_orig_out = Tsys_orig.reshape(-1,4)
+Tsys_norm_out = Tsys_norm_ext.reshape(-1,Tsys_spws_num)
+Tsys_ext_out = Tsys_ext.reshape(-1,Tsys_spws_num)
+Tsys_start_out = Tsys_start.reshape(-1,Tsys_spws_num)
+Tsys_orig_out = Tsys_orig.reshape(-1,Tsys_spws_num)
 
 ### write the WVR table into the dictionary.
 WVR_table['iant'] = np.tile(np.arange(nants), len(WVR_time_binned))

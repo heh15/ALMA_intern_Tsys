@@ -5,7 +5,7 @@ import numpy as np
 ###########################################################
 # basic settings
 
-vis = 'uid___A002_Xec4ed2_X912.ms'
+vis = 'uid___A002_Xed9025_X769c.ms'
 
 # number of antennas 
 msmd.open(vis)
@@ -22,6 +22,12 @@ scan_bpass = msmd.scansforintent('*CALIBRATE_BANDPASS*')
 scan_sci = msmd.scansforintent('*OBSERVE_TARGET*')
 msmd.done()
 
+# Tsys spws
+tb.open(vis+'/SYSCAL')
+Tsys_spws = tb.getcol('SPECTRAL_WINDOW_ID')
+tb.close()
+Tsys_spws_set = np.unique(Tsys_spws)
+Tsys_spws_num = len(Tsys_spws_set)
 
 time_avg = 10
 if time_avg == -1:
@@ -42,7 +48,7 @@ info_columns = ['WVR chan','Tsys spw','avg time']
 Tsys_table['info'] = dict.fromkeys(info_columns)
 Tsys_table['info']['vis'] = vis
 Tsys_table['info']['WVR chan'] = np.array([0,1,2,3])
-Tsys_table['info']['Tsys spw'] = np.array([17,19,21,23])
+Tsys_table['info']['Tsys spw'] = Tsys_spws_set
 Tsys_table['info']['avg time'] = time_avg
 
 # other columns
@@ -271,22 +277,21 @@ isin_obsrs_WVR = [isin_phase_WVR, isin_sci_WVR, isin_bpass_WVR]
 tb.open(vis+'/ASDM_CALATMOSPHERE')
 tau_temp = tb.getcol('tau')
 tau = np.mean(tau_temp, axis=0)
-tau_mean = tau_temp.reshape(-1, 4)
+tau_mean = tau_temp.reshape(-1, Tsys_spws_num)
 
 ### read the Tsys
 tb.open(vis+'/SYSCAL')
 tb3 = tb.query('')
-iants = tb3.getcol('ANTENNA_ID').reshape(-1,4)[:,0]
+iants = tb3.getcol('ANTENNA_ID').reshape(-1,Tsys_spws_num)[:,0]
 Tsys_spectrum = tb3.getcol('TSYS_SPECTRUM')
 Trx_spectrum = tb3.getcol('TRX_SPECTRUM')
 Tsky_spectrum = tb3.getcol('TSKY_SPECTRUM')
-Tsys_spws = tb3.getcol('SPECTRAL_WINDOW_ID')
 tb3.close()
 tb.close()
 
-Tsys = average_Tsys(Tsys_spectrum).reshape(-1, 4)
-Trx = average_Tsys(Trx_spectrum).reshape(-1, 4)
-Tsky = average_Tsys(Tsky_spectrum).reshape(-1, 4)
+Tsys = average_Tsys(Tsys_spectrum).reshape(-1, Tsys_spws_num)
+Trx = average_Tsys(Trx_spectrum).reshape(-1, Tsys_spws_num)
+Tsky = average_Tsys(Tsky_spectrum).reshape(-1, Tsys_spws_num)
 
 ## time for the system temperature
 time_Tsys = []
